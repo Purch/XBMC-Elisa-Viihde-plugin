@@ -25,19 +25,19 @@ if REMOTE_DBG:
         sys.stderr.write("Error: " + 
         "You must add org.python.pydev.debug.pysrc to your PYTHONPATH.")
         sys.exit(1)
-try:
-    import xbmc
-    import xbmcplugin
-    import xbmcgui
-    import xbmcaddon
-    import simplejson
-    __settings__ = xbmcaddon.Addon(id='plugin.video.elisa.viihde')
-    __language__ = __settings__.getLocalizedString
-    BASE_RESOURCE_PATH = xbmc.translatePath(os.path.join(__settings__.getAddonInfo('path'), "resources"))
-    sys.path.append(os.path.join(BASE_RESOURCE_PATH, "lib"))
-    vkopaivat = {0:__language__(30006), 1:__language__(30007), 2:__language__(30008), 3:__language__(30009), 4:__language__(30010), 5:__language__(30011), 6:__language__(30012)}
-except ImportError:
-    pass
+#try:
+import xbmc
+import xbmcplugin
+import xbmcgui
+import xbmcaddon
+import simplejson
+__settings__ = xbmcaddon.Addon(id='plugin.video.elisa.viihde')
+__language__ = __settings__.getLocalizedString
+BASE_RESOURCE_PATH = xbmc.translatePath(os.path.join(__settings__.getAddonInfo('path'), "resources"))
+sys.path.append(os.path.join(BASE_RESOURCE_PATH, "lib"))
+vkopaivat = {0:__language__(30006), 1:__language__(30007), 2:__language__(30008), 3:__language__(30009), 4:__language__(30010), 5:__language__(30011), 6:__language__(30012)}
+#except ImportError:
+#    pass
 
 #Elisa Viihde
 
@@ -103,7 +103,7 @@ def get_params():
 
 
 def add_search():
-    u = sys.argv[0] + "?search=" + str('indiana')
+    u = sys.argv[0] + "?search=" + str('tiededo')
     print "Search: " + u
     liz = xbmcgui.ListItem(label=__language__(30017), iconImage="DefaultFolder.png")
     xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url=u, listitem=liz, isFolder=True)
@@ -164,15 +164,47 @@ def search_items(qstr):
     return rows
 
 
-def show_search_items(qstr):
+def show_search_items(qstr, thumbs):
     print "search_items: " + qstr
     items = search_items(qstr)
     for item in items:
         name = create_name(item)
-        link = add_watch_link(name,
-                              item['program_id'],
-                              totalItems=len(items),
-                              )
+        #link = add_watch_link(name,
+        #                      item['program_id'],
+        #                      totalItems=len(items),
+        #                      )
+        if thumbs:
+            link = add_watch_link(name,
+                                  item['program_id'],
+                                  totalItems=len(items),
+                                  #playcount=row['viewcount'],
+                                  #duration=row['length'],
+                                  #date=date_name,
+                                  tn='',
+                                  aired=item['start_time'],
+                                  #episode=1,
+                                  plotoutline=item['desc'],
+                                  plot=item['channel'] + '\n' + 
+                                       item['start_time'] + '\n' + 
+                                       '\n' + 
+                                       item['desc']
+                                  )
+        else:
+            link = add_watch_link(name,
+                                  item['program_id'],
+                                  totalItems=len(items),
+                                  #playcount=row['viewcount'],
+                                  #duration=row['length'],
+                                  #date=date_name,
+                                  tn='',
+                                  aired=item['start_time'],
+                                  #episode=1,
+                                  plotoutline=item['desc'],
+                                  plot=item['channel'] + '\n' + 
+                                       item['start_time'] + '\n' + 
+                                       '\n' + 
+                                       item['desc']
+                                  )
 
 
 def add_dir(name, id, iconimage):
@@ -220,12 +252,15 @@ def create_name(prog_data):
     return prog_data['name'] + " (" + prog_data['channel'] + ", " + date_name + ")"
 
 
-def watch_program(prog_id):
+def watch_program(prog_id, thumbs):
     prog_data = get_prog_data(prog_id)
-    print prog_data
+    #print prog_data
     url = prog_data['url']
     name = create_name(prog_data)
-    listitem = xbmcgui.ListItem(name, thumbnailImage=prog_data['tn'])
+    if prog_data['tn'] and thumbs:
+        listitem = xbmcgui.ListItem(name, thumbnailImage=prog_data['tn'])
+    else:
+        listitem = xbmcgui.ListItem(name)
     listitem.setInfo('video', {'Title': name, 'plot': prog_data['short_text']})
     xbmc.Player().play(url, listitem)
     #mark program watched
@@ -236,12 +271,12 @@ def watch_program(prog_id):
 
 def fix_chars(string):
     string = string.replace("%20", " ")
-    string = re.sub('%C3%A4', '\u00E4', string) #ä
-    string = re.sub('%C3%B6', '\u00F6', string) #ö
-    string = re.sub('%C3%A5', '\u00E5', string) #å
-    string = re.sub('%C3%84', '\u00C4', string) #Ä
-    string = re.sub('%C3%96', '\u00D6', string) #Ö
-    string = re.sub('%C3%85', '\u00C5', string) #Å
+    string = re.sub('%C3%A4', '\u00E4', string)
+    string = re.sub('%C3%B6', '\u00F6', string)
+    string = re.sub('%C3%A5', '\u00E5', string)
+    string = re.sub('%C3%84', '\u00C4', string)
+    string = re.sub('%C3%96', '\u00D6', string)
+    string = re.sub('%C3%85', '\u00C5', string)
     string = re.sub('%2C', ',', string) #pilkku
     string = re.sub('%26', '&', string) #&
     string = re.sub('%3F', '?', string) #?
@@ -250,7 +285,7 @@ def fix_chars(string):
     return string
 
 
-def show_dir(id):
+def show_dir(id, thumbs):
     if str(id) == "0":
         #show root directory     
         folder_id = ""
@@ -297,12 +332,18 @@ def show_dir(id):
             date_name = __language__(30014) + " " + time.strftime("%H:%M", parsed_time)
         else:
             date_name = str(vkopaivat[weekday_numb]) + " " + time.strftime("%d.%m.%Y %H:%M", parsed_time)
-            date_sort_name = time.strftime("%d.%m.%Y", parsed_time)
+        date_sort_name = time.strftime("%d.%m.%Y", parsed_time)
 
-        #name = print_star + row['name'] + " (" + row['channel'] + ", " + date_name + ")"
-        name = print_star + row['name'] + " (" + date_sort_name + ")"
-        prog_data = cache.cacheFunction(get_prog_data, row['program_id'])
-        link = add_watch_link(name,
+        if thumbs:
+            name = print_star + row['name'] + " (" + date_sort_name + ")"
+        
+            prog_data = cache.cacheFunction(get_prog_data, row['program_id'])
+            try:
+                if prog_data['tn']:
+                    pass
+            except:
+                prog_data['tn'] = ''
+            link = add_watch_link(name,
                    row['program_id'],
                    totalItems=totalItems,
                    playcount=row['viewcount'],
@@ -317,6 +358,20 @@ def show_dir(id):
                         '\n' + 
                         prog_data['short_text']
                    )
+        else:
+            name = print_star + row['name'] + " (" + row['channel'] + ", " + date_name + ")"
+            link = add_watch_link(name,
+                                  row['program_id'],
+                                  totalItems=totalItems,
+                                  playcount=row['viewcount'],
+                                  duration=row['length'],
+                                  date=date_name,
+                                  tn='',
+                                  aired=row['start_time'],
+                                  #episode=1,
+                                  plotoutline='',
+                                  plot=''
+)
         
         
 def mainloop():
@@ -325,6 +380,12 @@ def mainloop():
     password = __settings__.getSetting("password") 
     response = urllib2.urlopen(get_login_url(username, password))
     link = response.read()
+    
+    if __settings__.getSetting("thumbnails") == 'true':
+        thumbs = True
+    else:
+        thumbs = False
+
     
     if not str(link) == "TRUE":
         dialog = xbmcgui.Dialog()
@@ -338,7 +399,10 @@ def mainloop():
     
         #dialog = xbmcgui.Dialog()
         #ok = dialog.ok('XBMC', str(params))
-        xbmcplugin.setContent(int(sys.argv[1]), 'episodes')
+        if thumbs:
+            xbmcplugin.setContent(int(sys.argv[1]), 'episodes')
+        else:
+            xbmcplugin.setContent(int(sys.argv[1]), 'files')
     
         folder_id = None
         prog_id = None
@@ -369,19 +433,23 @@ def mainloop():
             keyboard = xbmc.Keyboard()
             keyboard.doModal()
             if (keyboard.isConfirmed()):
-                show_search_items(str(keyboard.getText()))
+                show_search_items(str(keyboard.getText()), thumbs)
 
         elif folder_id == None and prog_id == None:
-            show_dir("0")
+            show_dir("0", thumbs)
         elif prog_id == None and folder_id <> None:
-            show_dir(str(folder_id))
+            show_dir(str(folder_id), thumbs)
         elif watch == "true" and prog_id <> None:
-            watch_program(str(prog_id))
+            watch_program(str(prog_id), thumbs)
         else:
-            show_dir("0")
+            show_dir("0", thumbs)
     
-    xbmc.executebuiltin('Container.SetViewMode(504)')
-
+    # Set view mode (C:\Program Files (x86)\XBMC\addons\skin.confluence\720p\MyVideoNav.xml)
+    if thumbs:
+        xbmc.executebuiltin('Container.SetViewMode(504)')
+    else:
+        xbmc.executebuiltin('Container.SetViewMode(51)')
+        
     xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 
