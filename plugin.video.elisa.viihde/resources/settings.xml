@@ -5,5 +5,7 @@
     <setting id="password" type="text" option="hidden" label="30002" enable="!eq(-1,)" default="" />
     <setting type="sep"/>
     <setting id="thumbnails" type="bool" label="30018" default="true" />
+    <setting id="enable_cache" type="bool" label="30019" default="true" />
+    <setting id="enable_threads" type="bool" label="30020" default="true" />
   </category>
 </settings>
