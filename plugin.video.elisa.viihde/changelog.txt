@@ -1,3 +1,11 @@
+[B]0.1.0b[/B]
+- testi versio!
+- Tredit, local cache, lisätiedot valinnaisiksi
+- Tredit hakee oikeasti lisätiedot ja pikkukuvat
+- Tredit ei jää taustalle junnaamaan, kun plugari "lopettaa"
+- local cache ei toimi tredien kanssa
+- local cache vaatii hitaan hakemiston ensilatauksen
+
 [B]0.0.4[/B]
 - Keksit palautettu ja polku muutettu
 - Tallenteen kuvaus/plot -teksti rivitetty nopeaa silmäystä varten
